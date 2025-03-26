@@ -23,6 +23,8 @@ func main() {
 		switch command[0] {
 		case "exit":
 			exit(command)
+		case "echo":
+			echo(command)
 
 		default:
 			fmt.Println(command[0] + ": command not found")
@@ -42,4 +44,14 @@ func exit(command []string) {
 	}
 
 	os.Exit(exitCode)
+}
+
+func echo(command []string) {
+	if !(len(command) >= 2) {
+		return
+	}
+
+	toPrint := command[1:]
+
+	fmt.Println(strings.Join(toPrint, " "))
 }
