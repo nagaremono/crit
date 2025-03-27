@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -69,7 +70,20 @@ func checkType(command []string) {
 
 	if slices.Contains(builtIns, toCheck) {
 		fmt.Println(toCheck + " is a shell builtin")
-	} else {
-		fmt.Println(toCheck + ": not found")
+		return
 	}
+
+	path := os.Getenv("PATH")
+	dirs := strings.Split(path, ":")
+
+	for _, dir := range dirs {
+		location := filepath.Join(dir, toCheck)
+		_, err := os.Stat(location)
+		if err == nil {
+			fmt.Fprintf(os.Stdout, "%s is %s\n", toCheck, location)
+			return
+		}
+	}
+
+	fmt.Fprintf(os.Stdout, "%s: not found\n", toCheck)
 }
