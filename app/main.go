@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-var builtIns = []string{"echo", "exit", "type"}
+var builtIns = []string{"echo", "exit", "type", "pwd"}
 
 func main() {
 	for {
@@ -33,6 +33,8 @@ func main() {
 			echo(commandArgs)
 		case "type":
 			typeOf(commandArgs)
+		case "pwd":
+			pwd()
 
 		default:
 			run(commandName, commandArgs)
@@ -103,4 +105,12 @@ func run(commandName string, commandArgs []string) {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 	}
 	fmt.Fprintf(os.Stdout, "%s", out)
+}
+
+func pwd() {
+	wd, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+	}
+	fmt.Fprintf(os.Stdout, "%s\n", wd)
 }
