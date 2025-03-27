@@ -22,9 +22,12 @@ func main() {
 			os.Exit(1)
 		}
 
-		command := strings.Split(strings.TrimSpace(input), " ")
-		commandName := command[0]
-		commandArgs := command[1:]
+		command, args, found := strings.Cut(strings.TrimSpace(input), " ")
+		commandName := command
+		var commandArgs []string
+		if found {
+			commandArgs = parseCmdArgs(args)
+		}
 
 		switch commandName {
 		case "exit":
@@ -126,4 +129,29 @@ func cd(commandArgs []string) {
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "cd: %s: No such file or directory\n", path)
 	}
+}
+
+func parseCmdArgs(args string) []string {
+	var commandArgs []string
+	var tmp string
+	var inQuote bool
+
+	for _, i := range args + " " {
+		if i == '\'' {
+			inQuote = !inQuote
+		} else if i == ' ' {
+			if !inQuote {
+				if len(tmp) > 0 {
+					commandArgs = append(commandArgs, tmp)
+					tmp = ""
+				}
+			} else {
+				tmp = tmp + string(i)
+			}
+		} else {
+			tmp = tmp + string(i)
+		}
+	}
+
+	return commandArgs
 }
