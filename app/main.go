@@ -43,34 +43,35 @@ func main() {
 }
 
 func exit(commandArgs []string) {
-	if len(commandArgs) >= 1 == false {
-		return
-	}
+	var exitCode int
 
-	exitCode, err := strconv.Atoi(commandArgs[1])
-	if err != nil {
-		fmt.Println(os.Stderr, "Invalid codee", err)
-		os.Exit(1)
+	if len(commandArgs) == 0 {
+		exitCode = 0
+	} else {
+		var err error
+		exitCode, err = strconv.Atoi(commandArgs[0])
+		if err != nil {
+			fmt.Println(os.Stderr, "Invalid codee", err)
+			os.Exit(1)
+		}
 	}
 
 	os.Exit(exitCode)
 }
 
 func echo(commandArgs []string) {
-	if !(len(commandArgs) >= 2) {
+	if len(commandArgs) == 0 {
 		fmt.Println("")
 	}
 
-	toPrint := commandArgs[1:]
-
-	fmt.Println(strings.Join(toPrint, " "))
+	fmt.Println(strings.Join(commandArgs, " "))
 }
 
 func typeOf(commandArgs []string) {
-	if !(len(commandArgs) >= 2) {
+	if len(commandArgs) == 0 {
 		fmt.Println(": not found")
 	}
-	toCheck := commandArgs[1]
+	toCheck := commandArgs[0]
 
 	if slices.Contains(builtIns, toCheck) {
 		fmt.Println(toCheck + " is a shell builtin")
