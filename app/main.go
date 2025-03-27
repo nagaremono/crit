@@ -35,6 +35,8 @@ func main() {
 			typeOf(commandArgs)
 		case "pwd":
 			pwd()
+		case "cd":
+			cd(commandArgs)
 
 		default:
 			run(commandName, commandArgs)
@@ -114,4 +116,18 @@ func pwd() {
 		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 	}
 	fmt.Fprintf(os.Stdout, "%s\n", wd)
+}
+
+func cd(commandArgs []string) {
+	var path string
+
+	if len(commandArgs) == 0 {
+		path = os.Getenv("HOME")
+	} else {
+		path = commandArgs[0]
+	}
+	err := os.Chdir(path)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "cd: %s: No such file or directory\n", path)
+	}
 }
