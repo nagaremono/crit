@@ -121,7 +121,7 @@ func pwd() {
 func cd(commandArgs []string) {
 	var path string
 
-	if len(commandArgs) == 0 {
+	if len(commandArgs) == 0 || commandArgs[0] == "~" {
 		path = os.Getenv("HOME")
 	} else {
 		path = commandArgs[0]
