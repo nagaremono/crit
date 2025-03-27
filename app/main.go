@@ -62,10 +62,6 @@ func exit(commandArgs []string) {
 }
 
 func echo(commandArgs []string) {
-	if len(commandArgs) == 0 {
-		fmt.Println("")
-	}
-
 	fmt.Println(strings.Join(commandArgs, " "))
 }
 
