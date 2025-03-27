@@ -10,12 +10,12 @@ import (
 	"strings"
 )
 
-func exit(command []string) {
-	if len(command) >= 2 == false {
+func exit(commandArgs []string) {
+	if len(commandArgs) >= 1 == false {
 		return
 	}
 
-	exitCode, err := strconv.Atoi(command[1])
+	exitCode, err := strconv.Atoi(commandArgs[1])
 	if err != nil {
 		fmt.Println(os.Stderr, "Invalid codee", err)
 		os.Exit(1)
@@ -24,21 +24,21 @@ func exit(command []string) {
 	os.Exit(exitCode)
 }
 
-func echo(command []string) {
-	if !(len(command) >= 2) {
+func echo(commandArgs []string) {
+	if !(len(commandArgs) >= 2) {
 		fmt.Println("")
 	}
 
-	toPrint := command[1:]
+	toPrint := commandArgs[1:]
 
 	fmt.Println(strings.Join(toPrint, " "))
 }
 
-func typeOf(command []string) {
-	if !(len(command) >= 2) {
+func typeOf(commandArgs []string) {
+	if !(len(commandArgs) >= 2) {
 		fmt.Println(": not found")
 	}
-	toCheck := command[1]
+	toCheck := commandArgs[1]
 
 	if slices.Contains(builtIns, toCheck) {
 		fmt.Println(toCheck + " is a shell builtin")
@@ -60,14 +60,14 @@ func typeOf(command []string) {
 	fmt.Fprintf(os.Stdout, "%s: not found\n", toCheck)
 }
 
-func run(command []string) {
-	_, err := exec.LookPath(command[0])
+func run(commandName string, commandArgs []string) {
+	_, err := exec.LookPath(commandName)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "%s: not found\n", command[0])
+		fmt.Fprintf(os.Stdout, "%s: not found\n", commandName)
 		return
 	}
 
-	cmd := exec.Command(command[0], command[1:]...)
+	cmd := exec.Command(commandName, commandArgs...)
 	out, err := cmd.Output()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)

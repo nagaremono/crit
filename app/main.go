@@ -18,19 +18,20 @@ func main() {
 			os.Exit(1)
 		}
 
-		input = strings.Trim(input, "\n")
-		command := strings.Split(input, " ")
+		command := strings.Split(strings.TrimSpace(input), " ")
+		commandName := command[0]
+		commandArgs := command[1:]
 
-		switch command[0] {
+		switch commandName {
 		case "exit":
-			exit(command)
+			exit(commandArgs)
 		case "echo":
-			echo(command)
+			echo(commandArgs)
 		case "type":
-			typeOf(command)
+			typeOf(commandArgs)
 
 		default:
-			run(command)
+			run(commandName, commandArgs)
 		}
 	}
 }
