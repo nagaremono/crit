@@ -31,7 +31,7 @@ func main() {
 		case "echo":
 			echo(command)
 		case "type":
-			checkType(command)
+			typeOf(command)
 
 		default:
 			run(command)
@@ -63,7 +63,7 @@ func echo(command []string) {
 	fmt.Println(strings.Join(toPrint, " "))
 }
 
-func checkType(command []string) {
+func typeOf(command []string) {
 	if !(len(command) >= 2) {
 		fmt.Println(": not found")
 	}
