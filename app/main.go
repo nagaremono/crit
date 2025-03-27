@@ -93,10 +93,13 @@ func run(command []string) {
 	_, err := exec.LookPath(command[0])
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "%s: not found\n", command[0])
+		return
 	}
 
 	cmd := exec.Command(command[0], command[1:]...)
-	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error executing %s: %s\n", command[0], err)
+	out, err := cmd.Output()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 	}
+	fmt.Fprintf(os.Stdout, "%s", out)
 }
