@@ -137,8 +137,15 @@ func parseCmdArgs(args string) []string {
 	var inSingleQuote bool
 	var inDoubleQuote bool
 
-	for _, i := range args + " " {
-		if i == '\'' && !inDoubleQuote {
+	for index, i := range args + " " {
+		if index > 0 && args[index-1] == '\\' {
+			if inDoubleQuote {
+				tmp = tmp + string('\\') + string(i)
+			} else {
+				tmp = tmp + string(i)
+			}
+		} else if i == '\\' {
+		} else if i == '\'' && !inDoubleQuote {
 			inSingleQuote = !inSingleQuote
 		} else if i == '"' && !inSingleQuote {
 			inDoubleQuote = !inDoubleQuote
