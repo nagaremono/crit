@@ -134,13 +134,16 @@ func cd(commandArgs []string) {
 func parseCmdArgs(args string) []string {
 	var commandArgs []string
 	var tmp string
-	var inQuote bool
+	var inSingleQuote bool
+	var inDoubleQuote bool
 
 	for _, i := range args + " " {
-		if i == '\'' {
-			inQuote = !inQuote
+		if i == '\'' && !inDoubleQuote {
+			inSingleQuote = !inSingleQuote
+		} else if i == '"' && !inSingleQuote {
+			inDoubleQuote = !inDoubleQuote
 		} else if i == ' ' {
-			if !inQuote {
+			if !inSingleQuote && !inDoubleQuote {
 				if len(tmp) > 0 {
 					commandArgs = append(commandArgs, tmp)
 					tmp = ""
