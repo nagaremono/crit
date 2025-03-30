@@ -132,34 +132,37 @@ func cd(commandArgs []string) {
 }
 
 func parseCmdArgs(args string) []string {
+	args = args + " "
 	var commandArgs []string
 	var tmp string
 	var inSingleQuote bool
 	var inDoubleQuote bool
 
-	for index, i := range args + " " {
-		if index > 0 && args[index-1] == '\\' {
-			if inDoubleQuote {
-				tmp = tmp + string('\\') + string(i)
+	for index := 0; index < len(args); index++ {
+		char := args[index]
+		if char == '\\' {
+			nextChar := args[index+1]
+			if (inDoubleQuote || inSingleQuote) && index+1 != len(args) {
+				tmp = tmp + string('\\') + string(nextChar)
 			} else {
-				tmp = tmp + string(i)
+				tmp = tmp + string(nextChar)
 			}
-		} else if i == '\\' {
-		} else if i == '\'' && !inDoubleQuote {
+			index++
+		} else if char == '\'' && !inDoubleQuote {
 			inSingleQuote = !inSingleQuote
-		} else if i == '"' && !inSingleQuote {
+		} else if char == '"' && !inSingleQuote {
 			inDoubleQuote = !inDoubleQuote
-		} else if i == ' ' {
+		} else if char == ' ' {
 			if !inSingleQuote && !inDoubleQuote {
 				if len(tmp) > 0 {
 					commandArgs = append(commandArgs, tmp)
 					tmp = ""
 				}
 			} else {
-				tmp = tmp + string(i)
+				tmp = tmp + string(char)
 			}
 		} else {
-			tmp = tmp + string(i)
+			tmp = tmp + string(char)
 		}
 	}
 
