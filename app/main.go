@@ -131,6 +131,10 @@ func cd(commandArgs []string) {
 	}
 }
 
+var doubleQuoteExc = []rune{
+	'\\', '$', '"', '\n',
+}
+
 func parseCmdArgs(args string) []string {
 	args = args + " "
 	var commandArgs []string
@@ -139,10 +143,11 @@ func parseCmdArgs(args string) []string {
 	var inDoubleQuote bool
 
 	for index := 0; index < len(args); index++ {
-		char := args[index]
+		char := rune(args[index])
 		if char == '\\' {
-			nextChar := args[index+1]
-			if (inDoubleQuote || inSingleQuote) && index+1 != len(args) {
+			nextChar := rune(args[index+1])
+			if (inSingleQuote && index+1 != len(args)) ||
+				(inDoubleQuote && !slices.Contains(doubleQuoteExc, nextChar)) {
 				tmp = tmp + string('\\') + string(nextChar)
 			} else {
 				tmp = tmp + string(nextChar)
