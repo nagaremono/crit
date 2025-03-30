@@ -22,12 +22,10 @@ func main() {
 			os.Exit(1)
 		}
 
-		command, args, found := strings.Cut(strings.TrimSpace(input), " ")
-		commandName := command
-		var commandArgs []string
-		if found {
-			commandArgs = parseCmdArgs(args)
-		}
+		parsed := parseCmdArgs(strings.TrimSpace(input))
+
+		commandName := parsed[0]
+		commandArgs := parsed[1:]
 
 		switch commandName {
 		case "exit":
