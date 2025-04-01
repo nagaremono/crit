@@ -28,29 +28,36 @@ func main() {
 		commandName := parsed[0]
 		commandArgs := parsed[1:]
 
-		var output string
-
-		switch commandName {
-		case "exit":
-			exit(commandArgs)
-		case "echo":
-			err, output = echo(commandArgs)
-		case "type":
-			err, output = typeOf(commandArgs)
-		case "pwd":
-			err, output = pwd()
-		case "cd":
-			cd(commandArgs)
-
-		default:
-			run(commandName, commandArgs)
-		}
+		err, output := execCommand(commandName, commandArgs)
 
 		if err != nil {
-			fmt.Println(os.Stdout, output)
+			fmt.Println(os.Stdout, err)
 		}
 		fmt.Print(os.Stdout, output)
 	}
+}
+
+func execCommand(name string, args []string) (error, string) {
+	var err error
+	var output string
+
+	switch name {
+	case "exit":
+		exit(args)
+	case "echo":
+		err, output = echo(args)
+	case "type":
+		err, output = typeOf(args)
+	case "pwd":
+		err, output = pwd()
+	case "cd":
+		cd(args)
+
+	default:
+		run(name, args)
+	}
+
+	return err, output
 }
 
 func exit(commandArgs []string) {
