@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -27,21 +28,28 @@ func main() {
 		commandName := parsed[0]
 		commandArgs := parsed[1:]
 
+		var output string
+
 		switch commandName {
 		case "exit":
 			exit(commandArgs)
 		case "echo":
-			echo(commandArgs)
+			err, output = echo(commandArgs)
 		case "type":
-			typeOf(commandArgs)
+			err, output = typeOf(commandArgs)
 		case "pwd":
-			pwd()
+			err, output = pwd()
 		case "cd":
 			cd(commandArgs)
 
 		default:
 			run(commandName, commandArgs)
 		}
+
+		if err != nil {
+			fmt.Println(os.Stdout, output)
+		}
+		fmt.Print(os.Stdout, output)
 	}
 }
 
@@ -62,19 +70,19 @@ func exit(commandArgs []string) {
 	os.Exit(exitCode)
 }
 
-func echo(commandArgs []string) {
-	fmt.Println(strings.Join(commandArgs, " "))
+func echo(commandArgs []string) (error, string) {
+	output := fmt.Sprintf("%s\n", strings.Join(commandArgs, " "))
+	return nil, output
 }
 
-func typeOf(commandArgs []string) {
+func typeOf(commandArgs []string) (error, string) {
 	if len(commandArgs) == 0 {
-		fmt.Println(": not found")
+		return nil, fmt.Sprintln(": not found")
 	}
 	toCheck := commandArgs[0]
 
 	if slices.Contains(builtIns, toCheck) {
-		fmt.Println(toCheck + " is a shell builtin")
-		return
+		return nil, fmt.Sprintln(toCheck + " is a shell builtin")
 	}
 
 	path := os.Getenv("PATH")
@@ -84,38 +92,41 @@ func typeOf(commandArgs []string) {
 		location := filepath.Join(dir, toCheck)
 		_, err := os.Stat(location)
 		if err == nil {
-			fmt.Fprintf(os.Stdout, "%s is %s\n", toCheck, location)
-			return
+			return nil, fmt.Sprintf("%s is %s\n", toCheck, location)
 		}
 	}
 
-	fmt.Fprintf(os.Stdout, "%s: not found\n", toCheck)
+	return nil, fmt.Sprintf("%s: not found\n", toCheck)
 }
 
-func run(commandName string, commandArgs []string) {
+func run(commandName string, commandArgs []string) (error, string) {
 	_, err := exec.LookPath(commandName)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "%s: not found\n", commandName)
-		return
+		output := fmt.Sprintf("%s: not found\n", commandName)
+		return err, output
 	}
 
 	cmd := exec.Command(commandName, commandArgs...)
 	out, err := cmd.Output()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		output := fmt.Sprintf("%s\n", err)
+		return err, output
 	}
-	fmt.Fprintf(os.Stdout, "%s", out)
+	output := fmt.Sprintf("%s\n", out)
+	return nil, output
 }
 
-func pwd() {
+func pwd() (error, string) {
 	wd, err := os.Getwd()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		output := fmt.Sprintf("%s\n", err.Error())
+		return err, output
 	}
-	fmt.Fprintf(os.Stdout, "%s\n", wd)
+	output := fmt.Sprintf("%s\n", wd)
+	return nil, output
 }
 
-func cd(commandArgs []string) {
+func cd(commandArgs []string) error {
 	var path string
 
 	if len(commandArgs) == 0 || commandArgs[0] == "~" {
@@ -125,8 +136,10 @@ func cd(commandArgs []string) {
 	}
 	err := os.Chdir(path)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "cd: %s: No such file or directory\n", path)
+		msg := fmt.Sprintf("cd: %s: No such file or directory\n", path)
+		errors.New(msg)
 	}
+	return nil
 }
 
 var doubleQuoteExc = []rune{
