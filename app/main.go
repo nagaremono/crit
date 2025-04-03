@@ -19,21 +19,20 @@ func main() {
 		fmt.Fprint(os.Stdout, "$ ")
 		input, err := bufio.NewReader(os.Stdin).ReadString('\n')
 		if err != nil {
-			fmt.Println(os.Stderr, "Error reading command:", err)
+			fmt.Fprintln(os.Stderr, "Error reading command:", err)
 			os.Exit(1)
 		}
 
 		parsed := parseCmdArgs(strings.TrimSpace(input))
-
 		commandName := parsed[0]
 		commandArgs := parsed[1:]
 
 		err, output := execCommand(commandName, commandArgs)
 
 		if err != nil {
-			fmt.Println(os.Stdout, err)
+			fmt.Fprint(os.Stderr, err)
 		}
-		fmt.Print(os.Stdout, output)
+		fmt.Fprint(os.Stdout, output)
 	}
 }
 
@@ -51,10 +50,10 @@ func execCommand(name string, args []string) (error, string) {
 	case "pwd":
 		err, output = pwd()
 	case "cd":
-		cd(args)
+		err = cd(args)
 
 	default:
-		run(name, args)
+		err, output = run(name, args)
 	}
 
 	return err, output
@@ -109,17 +108,17 @@ func typeOf(commandArgs []string) (error, string) {
 func run(commandName string, commandArgs []string) (error, string) {
 	_, err := exec.LookPath(commandName)
 	if err != nil {
-		output := fmt.Sprintf("%s: not found\n", commandName)
-		return err, output
+		output := fmt.Sprintf("%s: command not found\n", commandName)
+		return nil, output
 	}
 
 	cmd := exec.Command(commandName, commandArgs...)
 	out, err := cmd.Output()
 	if err != nil {
-		output := fmt.Sprintf("%s\n", err)
+		output := fmt.Sprintf("%s\n", err.Error())
 		return err, output
 	}
-	output := fmt.Sprintf("%s\n", out)
+	output := fmt.Sprintf("%s", out)
 	return nil, output
 }
 
@@ -144,7 +143,7 @@ func cd(commandArgs []string) error {
 	err := os.Chdir(path)
 	if err != nil {
 		msg := fmt.Sprintf("cd: %s: No such file or directory\n", path)
-		errors.New(msg)
+		return errors.New(msg)
 	}
 	return nil
 }
