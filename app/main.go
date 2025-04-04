@@ -24,15 +24,34 @@ func main() {
 		}
 
 		parsed := parseCmdArgs(strings.TrimSpace(input))
+		redirectOpIndex := slices.IndexFunc(parsed, func(s string) bool {
+			return s == ">" || s == "1>"
+		})
+
+		var output string
 		commandName := parsed[0]
-		commandArgs := parsed[1:]
+		var commandArgs []string
 
-		err, output := execCommand(commandName, commandArgs)
+		if redirectOpIndex != -1 {
+			commandArgs = parsed[1:redirectOpIndex]
+		} else {
+			commandArgs = parsed[1:]
+		}
 
+		err, output = execCommand(commandName, commandArgs)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 		}
-		fmt.Fprint(os.Stdout, output)
+
+		if redirectOpIndex != -1 {
+			err = writeToFile(parsed[redirectOpIndex+1], output)
+			if err != nil {
+				fmt.Fprint(os.Stderr, err)
+			}
+		} else {
+			fmt.Fprint(os.Stdout, output)
+		}
+
 	}
 }
 
@@ -115,8 +134,12 @@ func run(commandName string, commandArgs []string) (error, string) {
 	cmd := exec.Command(commandName, commandArgs...)
 	out, err := cmd.Output()
 	if err != nil {
-		output := fmt.Sprintf("%s\n", err.Error())
-		return err, output
+		switch e := err.(type) {
+		case *exec.ExitError:
+			return errors.New(string(e.Stderr)), string(out)
+		default:
+			return err, string(out)
+		}
 	}
 	output := fmt.Sprintf("%s", out)
 	return nil, output
@@ -189,4 +212,18 @@ func parseCmdArgs(args string) []string {
 	}
 
 	return commandArgs
+}
+
+func writeToFile(filename string, content string) error {
+	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(content)
+	if err != nil {
+		return err
+	}
+	return nil
 }
