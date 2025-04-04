@@ -63,16 +63,16 @@ func execCommand(name string, args []string) (error, string) {
 	case "exit":
 		exit(args)
 	case "echo":
-		err, output = echo(args)
+		output, err = echo(args)
 	case "type":
-		err, output = typeOf(args)
+		output, err = typeOf(args)
 	case "pwd":
-		err, output = pwd()
+		output, err = pwd()
 	case "cd":
 		err = cd(args)
 
 	default:
-		err, output = run(name, args)
+		output, err = run(name, args)
 	}
 
 	return err, output
@@ -95,19 +95,19 @@ func exit(commandArgs []string) {
 	os.Exit(exitCode)
 }
 
-func echo(commandArgs []string) (error, string) {
+func echo(commandArgs []string) (string, error) {
 	output := fmt.Sprintf("%s\n", strings.Join(commandArgs, " "))
-	return nil, output
+	return output, nil
 }
 
-func typeOf(commandArgs []string) (error, string) {
+func typeOf(commandArgs []string) (string, error) {
 	if len(commandArgs) == 0 {
-		return nil, fmt.Sprintln(": not found")
+		return fmt.Sprintln(": not found"), nil
 	}
 	toCheck := commandArgs[0]
 
 	if slices.Contains(builtIns, toCheck) {
-		return nil, fmt.Sprintln(toCheck + " is a shell builtin")
+		return fmt.Sprintln(toCheck + " is a shell builtin"), nil
 	}
 
 	path := os.Getenv("PATH")
@@ -117,18 +117,18 @@ func typeOf(commandArgs []string) (error, string) {
 		location := filepath.Join(dir, toCheck)
 		_, err := os.Stat(location)
 		if err == nil {
-			return nil, fmt.Sprintf("%s is %s\n", toCheck, location)
+			return fmt.Sprintf("%s is %s\n", toCheck, location), nil
 		}
 	}
 
-	return nil, fmt.Sprintf("%s: not found\n", toCheck)
+	return fmt.Sprintf("%s: not found\n", toCheck), nil
 }
 
-func run(commandName string, commandArgs []string) (error, string) {
+func run(commandName string, commandArgs []string) (string, error) {
 	_, err := exec.LookPath(commandName)
 	if err != nil {
 		output := fmt.Sprintf("%s: command not found\n", commandName)
-		return nil, output
+		return output, nil
 	}
 
 	cmd := exec.Command(commandName, commandArgs...)
@@ -136,23 +136,23 @@ func run(commandName string, commandArgs []string) (error, string) {
 	if err != nil {
 		switch e := err.(type) {
 		case *exec.ExitError:
-			return errors.New(string(e.Stderr)), string(out)
+			return string(out), errors.New(string(e.Stderr))
 		default:
-			return err, string(out)
+			return string(out), err
 		}
 	}
 	output := fmt.Sprintf("%s", out)
-	return nil, output
+	return output, nil
 }
 
-func pwd() (error, string) {
+func pwd() (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		output := fmt.Sprintf("%s\n", err.Error())
-		return err, output
+		return output, err
 	}
 	output := fmt.Sprintf("%s\n", wd)
-	return nil, output
+	return output, err
 }
 
 func cd(commandArgs []string) error {
