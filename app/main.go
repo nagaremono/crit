@@ -7,12 +7,17 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 )
 
-var builtIns = []string{"echo", "exit", "type", "pwd"}
+var (
+	builtIns      = []string{"echo", "exit", "type", "pwd"}
+	redirectOpPtn = "^(1|2)?>$"
+	redirectOpReg = regexp.MustCompile(redirectOpPtn)
+)
 
 func main() {
 	for {
@@ -25,7 +30,8 @@ func main() {
 
 		parsed := parseCmdArgs(strings.TrimSpace(input))
 		redirectOpIndex := slices.IndexFunc(parsed, func(s string) bool {
-			return s == ">" || s == "1>"
+			matched, _ := regexp.MatchString(redirectOpPtn, s)
+			return matched
 		})
 
 		var output string
@@ -44,10 +50,7 @@ func main() {
 		}
 
 		if redirectOpIndex != -1 {
-			err = writeToFile(parsed[redirectOpIndex+1], output)
-			if err != nil {
-				fmt.Fprint(os.Stderr, err)
-			}
+			writeToFile(parsed[redirectOpIndex+1], output)
 		} else {
 			fmt.Fprint(os.Stdout, output)
 		}
