@@ -44,21 +44,46 @@ func main() {
 			commandArgs = parsed[1:]
 		}
 
-		err, output = execCommand(commandName, commandArgs)
+		output, err = execCommand(commandName, commandArgs)
+
+		if redirectOpIndex != -1 {
+			// error redirect
+			if parsed[redirectOpIndex] == "2>" {
+				var msg string
+				if err != nil {
+					msg = err.Error()
+				}
+				err := writeToFile(parsed[redirectOpIndex+1], msg)
+				if err != nil {
+					fmt.Fprint(os.Stderr, err)
+				}
+			} else {
+				if err != nil {
+					fmt.Fprint(os.Stderr, err)
+				}
+			}
+
+			// output redirect
+			if parsed[redirectOpIndex] == ">" || parsed[redirectOpIndex] == "1>" {
+				err := writeToFile(parsed[redirectOpIndex+1], output)
+				if err != nil {
+					fmt.Fprint(os.Stderr, err)
+				}
+			} else {
+				fmt.Fprint(os.Stdout, output)
+			}
+			continue
+		}
+
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 		}
-
-		if redirectOpIndex != -1 {
-			writeToFile(parsed[redirectOpIndex+1], output)
-		} else {
-			fmt.Fprint(os.Stdout, output)
-		}
+		fmt.Fprint(os.Stdout, output)
 
 	}
 }
 
-func execCommand(name string, args []string) (error, string) {
+func execCommand(name string, args []string) (string, error) {
 	var err error
 	var output string
 
@@ -78,7 +103,7 @@ func execCommand(name string, args []string) (error, string) {
 		output, err = run(name, args)
 	}
 
-	return err, output
+	return output, err
 }
 
 func exit(commandArgs []string) {
@@ -218,7 +243,11 @@ func parseCmdArgs(args string) []string {
 }
 
 func writeToFile(filename string, content string) error {
-	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	err := os.MkdirAll(filepath.Dir(filename), os.ModePerm)
+	if err != nil {
+		return err
+	}
+	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		return err
 	}
