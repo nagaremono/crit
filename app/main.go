@@ -47,13 +47,21 @@ func main() {
 		output, err = execCommand(commandName, commandArgs)
 
 		if redirectOpIndex != -1 {
+			filename := parsed[redirectOpIndex+1]
+			appendFlags := os.O_RDWR | os.O_CREATE | os.O_APPEND
+			truncateFlags := os.O_RDWR | os.O_CREATE | os.O_TRUNC
 			// error redirect
+			var msg string
+			if err != nil {
+				msg = err.Error()
+			}
 			if parsed[redirectOpIndex] == "2>" {
-				var msg string
+				err := writeToFile(filename, msg, truncateFlags)
 				if err != nil {
-					msg = err.Error()
+					fmt.Fprint(os.Stderr, err)
 				}
-				err := writeToFile(parsed[redirectOpIndex+1], msg, os.O_RDWR|os.O_CREATE|os.O_TRUNC)
+			} else if parsed[redirectOpIndex] == "2>>" {
+				err := writeToFile(filename, msg, appendFlags)
 				if err != nil {
 					fmt.Fprint(os.Stderr, err)
 				}
@@ -66,16 +74,15 @@ func main() {
 			// output redirect
 			op := parsed[redirectOpIndex]
 			if op == ">" || op == "1>" {
-				err := writeToFile(parsed[redirectOpIndex+1], output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
+				err := writeToFile(filename, output, truncateFlags)
 				if err != nil {
 					fmt.Fprint(os.Stderr, err)
 				}
 			} else if op == ">>" || op == "1>>" {
-				err := writeToFile(parsed[redirectOpIndex+1], output, os.O_WRONLY|os.O_CREATE|os.O_APPEND)
+				err := writeToFile(filename, output, appendFlags)
 				if err != nil {
 					fmt.Fprint(os.Stderr, err)
 				}
-
 			} else {
 				fmt.Fprint(os.Stdout, output)
 			}
