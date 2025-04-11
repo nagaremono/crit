@@ -15,7 +15,7 @@ import (
 
 var (
 	builtIns      = []string{"echo", "exit", "type", "pwd"}
-	redirectOpPtn = "^(1|2)?>$"
+	redirectOpPtn = "^(1|2)?>?>$"
 	redirectOpReg = regexp.MustCompile(redirectOpPtn)
 )
 
@@ -53,7 +53,7 @@ func main() {
 				if err != nil {
 					msg = err.Error()
 				}
-				err := writeToFile(parsed[redirectOpIndex+1], msg)
+				err := writeToFile(parsed[redirectOpIndex+1], msg, os.O_RDWR|os.O_CREATE|os.O_TRUNC)
 				if err != nil {
 					fmt.Fprint(os.Stderr, err)
 				}
@@ -64,11 +64,18 @@ func main() {
 			}
 
 			// output redirect
-			if parsed[redirectOpIndex] == ">" || parsed[redirectOpIndex] == "1>" {
-				err := writeToFile(parsed[redirectOpIndex+1], output)
+			op := parsed[redirectOpIndex]
+			if op == ">" || op == "1>" {
+				err := writeToFile(parsed[redirectOpIndex+1], output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
 				if err != nil {
 					fmt.Fprint(os.Stderr, err)
 				}
+			} else if op == ">>" || op == "1>>" {
+				err := writeToFile(parsed[redirectOpIndex+1], output, os.O_WRONLY|os.O_CREATE|os.O_APPEND)
+				if err != nil {
+					fmt.Fprint(os.Stderr, err)
+				}
+
 			} else {
 				fmt.Fprint(os.Stdout, output)
 			}
@@ -242,12 +249,12 @@ func parseCmdArgs(args string) []string {
 	return commandArgs
 }
 
-func writeToFile(filename string, content string) error {
+func writeToFile(filename string, content string, flag int) error {
 	err := os.MkdirAll(filepath.Dir(filename), os.ModePerm)
 	if err != nil {
 		return err
 	}
-	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	file, err := os.OpenFile(filename, flag, os.ModePerm)
 	if err != nil {
 		return err
 	}
